@@ -50,6 +50,7 @@ public class Driver {
 			System.out.print("Enter a URL to analyze: ");
 			url = kybd.nextLine();
 
+			// Add 'http://' to beginning of URL if not provided
 			if (!url.toLowerCase().startsWith(urlStart))
 				url = urlStart + url;
 
@@ -159,11 +160,18 @@ public class Driver {
 	 * @param passages loaded passages to analyze against
 	 */
 	private static void analyzeText(Reader reader,
-			ArrayList<LoadedPassage> passages) {
+			ArrayList<LoadedPassage> passages) throws IOException {
+
+		// FIXME add try/catch for IO
+
 		CharStream charStream = new CharStream(reader);
 		WordScanner wordScanner = new WordScanner(charStream);
 		ArrayList<String> wordBag = new ArrayList<>();
 		HashSet<String> duplicates = new HashSet<String>();
+		BufferedWriter writer = null;
+		String filename = "AnalyzedFile.txt";
+		File outputFile = new File(filename);
+		writer = new BufferedWriter(new FileWriter(outputFile));
 
 		while (wordScanner.hasNextWord()) {
 			final String word = wordScanner.nextWord();
@@ -176,33 +184,43 @@ public class Driver {
 		}
 		if (wordBag.size() == 0) {
 			System.out.println("Error: all words provided were too common");
+			writer.close();
 			return;
 		}
 
 		ArrayList<Integer> titleLengths = new ArrayList<>();
 		titleLengths.add(14);
 		System.out.printf("%16s", "given word");
+		writer.write("given word\t");
 		for (LoadedPassage passageEntry : passages) {
 			titleLengths.add(passageEntry.passageTitle.length());
 			System.out.print("   " + passageEntry.passageTitle);
+			writer.write(passageEntry.passageTitle);
 		}
 		System.out.println();
+		writer.write("\n");
 
 		for (int i : titleLengths) {
 			String dashes = new String(new char[i + 2]).replace("\0", "-");
 			System.out.print("+" + dashes);
+			writer.write("+" + dashes);
 		}
 		System.out.println("+");
+		writer.write("+\n");
 
 		for (String word : wordBag) {
 			System.out.printf("%16s", word);
+			writer.write(String.format("%16s", word));
 			for (LoadedPassage pe : passages) {
 				final int width = pe.passageTitle.length() + 3;
 				final int cnt = pe.wordCounter.getWordCount(word);
 				System.out.printf("%" + width + "d", cnt);
+				writer.write(String.format("%" + width + "d", cnt));
 			}
 			System.out.println();
+			writer.write("\n");
 		}
+		writer.close();
 	}
 
 	/**
