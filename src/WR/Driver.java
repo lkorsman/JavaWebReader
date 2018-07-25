@@ -67,7 +67,7 @@ public class Driver {
 			loadFileCmd(filename, loadedPassages);
 
 			// Analyze file
-			analyzeCmd(filename, loadedPassages);
+			analyzeCmd(filename, loadedPassages, url);
 
 			System.out.println("File written and closed!");
 		} catch (IOException e) {
@@ -129,9 +129,9 @@ public class Driver {
 	 * @param passages currently loaded passages
 	 */
 	private static void analyzeCmd(String filename,
-			ArrayList<LoadedPassage> passages) {
+			ArrayList<LoadedPassage> passages, String url) {
 		final String fname = filename.trim();
-		analyzeFile(fname, passages);
+		analyzeFile(fname, passages, url);
 	}
 
 	/**
@@ -141,10 +141,10 @@ public class Driver {
 	 * @param passages currently loaded passages
 	 */
 	private static void analyzeFile(String fname,
-			ArrayList<LoadedPassage> passages) {
+			ArrayList<LoadedPassage> passages, String url) {
 		try {
 			Reader reader = new FileReader(fname);
-			analyzeText(reader, passages);
+			analyzeText(reader, passages, url);
 			reader.close();
 		} catch (FileNotFoundException e) {
 			System.out.println("Error: file not found.");
@@ -160,7 +160,8 @@ public class Driver {
 	 * @param passages loaded passages to analyze against
 	 */
 	private static void analyzeText(Reader reader,
-			ArrayList<LoadedPassage> passages) throws IOException {
+			ArrayList<LoadedPassage> passages, String url)
+			throws IOException {
 
 		// FIXME add try/catch for IO
 
@@ -191,17 +192,18 @@ public class Driver {
 		ArrayList<Integer> titleLengths = new ArrayList<>();
 		titleLengths.add(14);
 		System.out.printf("%16s", "given word");
-		writer.write("given word\t");
+		writer.write("Website: " + url + "\n\n");
+		writer.write(" given word\t\t");
 		for (LoadedPassage passageEntry : passages) {
 			titleLengths.add(passageEntry.passageTitle.length());
 			System.out.print("   " + passageEntry.passageTitle);
-			writer.write(passageEntry.passageTitle);
+			writer.write("Word Count");
 		}
 		System.out.println();
 		writer.write("\n");
 
 		for (int i : titleLengths) {
-			String dashes = new String(new char[i + 2]).replace("\0", "-");
+			String dashes = new String(new char[i + 4]).replace("\0", "-");
 			System.out.print("+" + dashes);
 			writer.write("+" + dashes);
 		}
