@@ -241,13 +241,10 @@ public class Driver {
 		Collections.reverse(outputArray);
 
 		TwoVariableHolder tempHolder;
-		int wordCnt;
-		String theWord;
 		for (int i = 0; i < 10; i++) {
-			temp = outputArray.get(i);
-			wordCnt = temp.getCount();
-			theWord = temp.getWord();
-			writer.write(temp.toString());
+			tempHolder = outputArray.get(i);
+
+			writer.write(tempHolder.toString());
 		}
 
 		writer.close();
