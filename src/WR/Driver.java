@@ -19,6 +19,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Scanner;
 
@@ -193,6 +195,7 @@ public class Driver {
 		titleLengths.add(14);
 		System.out.printf("%16s", "given word");
 		writer.write("Website: " + url + "\n\n");
+		writer.write("Top 10 Words:\n");
 		writer.write(" given word\t\t");
 		for (LoadedPassage passageEntry : passages) {
 			titleLengths.add(passageEntry.passageTitle.length());
@@ -210,18 +213,43 @@ public class Driver {
 		System.out.println("+");
 		writer.write("+\n");
 
+		// Array to sort words by frequency
+		ArrayList<TwoVariableHolder> outputArray = new ArrayList<>();
+		TwoVariableHolder temp;
+
 		for (String word : wordBag) {
 			System.out.printf("%16s", word);
-			writer.write(String.format("%16s", word));
 			for (LoadedPassage pe : passages) {
 				final int width = pe.passageTitle.length() + 3;
 				final int cnt = pe.wordCounter.getWordCount(word);
 				System.out.printf("%" + width + "d", cnt);
-				writer.write(String.format("%" + width + "d", cnt));
+				temp = new TwoVariableHolder(cnt, word);
+				outputArray.add(temp);
 			}
+
 			System.out.println();
-			writer.write("\n");
 		}
+
+		Collections.sort(outputArray, new Comparator<TwoVariableHolder>() {
+			public int compare(TwoVariableHolder var1,
+					TwoVariableHolder var2) {
+				return var1.getCount() - var2.getCount();
+			}
+		});
+
+		// Sort descending
+		Collections.reverse(outputArray);
+
+		TwoVariableHolder tempHolder;
+		int wordCnt;
+		String theWord;
+		for (int i = 0; i < 10; i++) {
+			temp = outputArray.get(i);
+			wordCnt = temp.getCount();
+			theWord = temp.getWord();
+			writer.write(temp.toString());
+		}
+
 		writer.close();
 	}
 
