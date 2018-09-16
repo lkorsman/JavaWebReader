@@ -18,11 +18,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Scanner;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -44,13 +45,16 @@ public class Driver {
 		File outputFile = new File(filename);
 		writer = new BufferedWriter(new FileWriter(outputFile));
 		ArrayList<LoadedPassage> loadedPassages = new ArrayList<>();
-		Scanner kybd = new Scanner(System.in);
 
 		try {
 
 			// Get URL
-			System.out.print("Enter a URL to analyze: ");
-			url = kybd.nextLine();
+			if (args.length != 1) {
+				writer.close();
+				return;
+			} else {
+				url = args[0];
+			}
 
 			// Add 'http://' to beginning of URL if not provided
 			if (!url.toLowerCase().startsWith(urlStart))
@@ -75,8 +79,6 @@ public class Driver {
 		} catch (IOException e) {
 			System.out.println("Error: cannot read URL");
 		}
-
-		kybd.close();
 	}
 
 	/**
@@ -167,12 +169,30 @@ public class Driver {
 
 		// FIXME add try/catch for IO
 
+		final String FILE_EXTENSION = ".txt";
+		final String WWW_CHECK = "http://www.";
 		CharStream charStream = new CharStream(reader);
 		WordScanner wordScanner = new WordScanner(charStream);
 		ArrayList<String> wordBag = new ArrayList<>();
 		HashSet<String> duplicates = new HashSet<String>();
 		BufferedWriter writer = null;
+		LocalDate now = LocalDate.now();
+		DateTimeFormatter formatter = DateTimeFormatter
+				.ofPattern("yyyyLLLLdd");
+		String timeString = now.format(formatter);
 		String filename = "AnalyzedFile.txt";
+
+		String beginUrl = url.substring(0, 11);
+
+		if (beginUrl.equals(WWW_CHECK)) {
+			filename = url.substring(11);
+		} else {
+			filename = url.substring(7);
+		}
+		filename = filename.replace(".", "");
+		filename += timeString;
+		filename += FILE_EXTENSION;
+
 		File outputFile = new File(filename);
 		writer = new BufferedWriter(new FileWriter(outputFile));
 
@@ -230,15 +250,8 @@ public class Driver {
 			System.out.println();
 		}
 
-		Collections.sort(outputArray, new Comparator<TwoVariableHolder>() {
-			public int compare(TwoVariableHolder var1,
-					TwoVariableHolder var2) {
-				return var1.getCount() - var2.getCount();
-			}
-		});
-
-		// Sort descending
-		Collections.reverse(outputArray);
+		// Sort output in descending order
+		outputArray = sortOutputArray(outputArray);
 
 		TwoVariableHolder tempHolder;
 		for (int i = 0; i < 10; i++) {
@@ -248,6 +261,27 @@ public class Driver {
 		}
 
 		writer.close();
+	}
+
+	/**
+	 * Sorts an ArrayList of TwoVariableHolder objects in desc order based on
+	 * the TwoVariableHolder's count variable
+	 * 
+	 * @param outputArray An ArrayList of TwoVariableHolder objects
+	 * @return a non-ascending ordered ArrayList of TwoVariableHolder objects
+	 */
+	private static ArrayList<TwoVariableHolder> sortOutputArray(
+			ArrayList<TwoVariableHolder> outputArray) {
+		Collections.sort(outputArray, new Comparator<TwoVariableHolder>() {
+			public int compare(TwoVariableHolder var1,
+					TwoVariableHolder var2) {
+				return var1.getCount() - var2.getCount();
+			}
+		});
+
+		// Sort descending
+		Collections.reverse(outputArray);
+		return outputArray;
 	}
 
 	/**
