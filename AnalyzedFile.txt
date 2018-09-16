@@ -1,15 +1,15 @@
-Website: http://www.lukekorsman.tk
+Website: http://encryptword.azurewebsites.net
 
 Top 10 Words:
  given word		Word Count
 +------------------+--------------+
-         playing,          4
-          school,          4
-        software,          3
-            emei,          2
-           mount,          2
-          guitar,          2
-         college,          2
-         decided,          2
-        computer,          2
-       computers,          2
+     encryptword,          3
+            home,          2
+            2018,          1
+           value,          1
+           shift,          1
+          cipher,          1
+          caesar,          1
+           using,          1
+           words,          1
+       encrypted,          1

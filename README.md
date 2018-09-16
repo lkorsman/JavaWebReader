@@ -19,4 +19,5 @@ To run this program:
 3) To run on the command line/terminal:
 	-Navigate to the directory where your Runnable JAR file was saved
 	 and type the following on the command line:
-	 java -jar [Name of your JAR file].jar
+	 java -jar [Name of your JAR file].jar $URL
+	-$URL is the URL to be analyzed
