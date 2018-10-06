@@ -5,8 +5,7 @@
  */
 
 /*
- * This is a driver file to test each object in the package is 
- * working. The goal of this program is to read web pages and find
+ * The goal of this program is to read web pages and find
  * the most common words and how often they occur.
  */
 package WR;
@@ -33,7 +32,7 @@ public class Driver {
 	/**
 	 * Main entry point into the program
 	 * 
-	 * @param args not used
+	 * @param args URL to have analyzed for word count
 	 * @throws IOException if web page URL does not exist
 	 */
 	public static void main(String[] args) throws IOException {
@@ -47,45 +46,44 @@ public class Driver {
 		ArrayList<LoadedPassage> loadedPassages = new ArrayList<>();
 
 		try {
-
 			// Get URL
 			if (args.length != 1) {
 				writer.close();
 				return;
 			} else {
 				url = args[0];
+
+				// Add 'http://' to beginning of URL if not provided
+				if (!url.toLowerCase().startsWith(urlStart))
+					url = urlStart + url;
+
+				Document doc = Jsoup.connect(url).get();
+
+				// Get body of web page
+				body = doc.text();
+
+				// Write body to BufferedWriter
+				writer.write(body);
+				writer.close();
+
+				// Load file created from URL
+				loadFileCmd(filename, loadedPassages);
+
+				// Analyze file
+				analyzeCmd(filename, loadedPassages, url);
+
+				System.out.println("File written and closed!");
 			}
-
-			// Add 'http://' to beginning of URL if not provided
-			if (!url.toLowerCase().startsWith(urlStart))
-				url = urlStart + url;
-
-			Document doc = Jsoup.connect(url).get();
-
-			// Get body of web page
-			body = doc.text();
-
-			// Write body to BufferedWriter
-			writer.write(body);
-			writer.close();
-
-			// Load file created from URL
-			loadFileCmd(filename, loadedPassages);
-
-			// Analyze file
-			analyzeCmd(filename, loadedPassages, url);
-
-			System.out.println("File written and closed!");
 		} catch (IOException e) {
 			System.out.println("Error: cannot read URL");
 		}
 	}
 
 	/**
-	 * Loads the given file into the system. The words are processed and
-	 * counted. The results of the load can be displayed with the list command.
+	 * Loads the given file into the system. The words are processed and counted.
+	 * The results of the load can be displayed with the list command.
 	 * 
-	 * @param lineScanner unscanned characters from the user's input
+	 * @param filename name of the file URL body to be written to
 	 * @param loadedPassages currently loaded passages to modify
 	 */
 	private static void loadFileCmd(String filename,
@@ -100,8 +98,8 @@ public class Driver {
 			WordScanner wordScanner = new WordScanner(charStream);
 			WordCounter currCounter = new WordCounter(HASH_CAPACITY);
 			while (wordScanner.hasNextWord()) {
-				final String word = wordScanner.nextWord();
-				currCounter.incrementWordCount(word);
+				final String WORD = wordScanner.nextWord();
+				currCounter.incrementWordCount(WORD);
 			}
 			reader.close();
 			removeCommonWordsFrom(currCounter);
@@ -127,10 +125,11 @@ public class Driver {
 	}
 
 	/**
-	 * Analyzes the given text or file contents
+	 * Analyzes the given text or file contents counting word frequency
 	 * 
-	 * @param lineScanner unscanned characters from the user's input
-	 * @param passages currently loaded passages
+	 * @param filename name of the file to be analyzed
+	 * @param passages a list of files to be analyzed
+	 * @param url the URL from which the file was generated
 	 */
 	private static void analyzeCmd(String filename,
 			ArrayList<LoadedPassage> passages, String url) {
@@ -139,10 +138,11 @@ public class Driver {
 	}
 
 	/**
-	 * Analyzes the words that are read from the file instead of user entry
+	 * Analyzes the words that are read from the file
 	 * 
-	 * @param fname file name to read words from
-	 * @param passages currently loaded passages
+	 * @param fname name of the file to be analyzed
+	 * @param passages list of files to be analyzed
+	 * @param url the URL from which the fname was generated
 	 */
 	private static void analyzeFile(String fname,
 			ArrayList<LoadedPassage> passages, String url) {
@@ -158,10 +158,12 @@ public class Driver {
 	}
 
 	/**
-	 * Analyzes the given text against the loaded passages
+	 * Analyzes the given text, generates an output file and prints common words
+	 * to the console
 	 * 
 	 * @param reader character stream to analyze
 	 * @param passages loaded passages to analyze against
+	 * @param url the URL from which the fname was generated
 	 */
 	private static void analyzeText(Reader reader,
 			ArrayList<LoadedPassage> passages, String url)
@@ -178,7 +180,7 @@ public class Driver {
 		BufferedWriter writer = null;
 		LocalDate now = LocalDate.now();
 		DateTimeFormatter formatter = DateTimeFormatter
-				.ofPattern("yyyyLLLLdd");
+				.ofPattern("yyyyMMdd");
 		String timeString = now.format(formatter);
 		String filename = "AnalyzedFile.txt";
 
@@ -264,8 +266,8 @@ public class Driver {
 	}
 
 	/**
-	 * Sorts an ArrayList of TwoVariableHolder objects in desc order based on
-	 * the TwoVariableHolder's count variable
+	 * Sorts an ArrayList of TwoVariableHolder objects in desc order based on the
+	 * TwoVariableHolder's count variable
 	 * 
 	 * @param outputArray An ArrayList of TwoVariableHolder objects
 	 * @return a non-ascending ordered ArrayList of TwoVariableHolder objects
