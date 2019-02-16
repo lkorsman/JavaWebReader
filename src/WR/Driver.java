@@ -52,7 +52,6 @@ public class Driver {
 				return;
 			} else {
 				url = args[0];
-
 				// Add 'http://' to beginning of URL if not provided
 				if (!url.toLowerCase().startsWith(urlStart))
 					url = urlStart + url;
@@ -166,37 +165,11 @@ public class Driver {
 	 * @param url the URL from which the fname was generated
 	 */
 	private static void analyzeText(Reader reader,
-			ArrayList<LoadedPassage> passages, String url)
-			throws IOException {
-
-		// FIXME add try/catch for IO
-
-		final String FILE_EXTENSION = ".txt";
-		final String WWW_CHECK = "http://www.";
+			ArrayList<LoadedPassage> passages, String url) throws IOException {
 		CharStream charStream = new CharStream(reader);
 		WordScanner wordScanner = new WordScanner(charStream);
 		ArrayList<String> wordBag = new ArrayList<>();
 		HashSet<String> duplicates = new HashSet<String>();
-		BufferedWriter writer = null;
-		LocalDate now = LocalDate.now();
-		DateTimeFormatter formatter = DateTimeFormatter
-				.ofPattern("yyyyMMdd");
-		String timeString = now.format(formatter);
-		String filename = "AnalyzedFile.txt";
-
-		String beginUrl = url.substring(0, 11);
-
-		if (beginUrl.equals(WWW_CHECK)) {
-			filename = url.substring(11);
-		} else {
-			filename = url.substring(7);
-		}
-		filename = filename.replace(".", "");
-		filename += timeString;
-		filename += FILE_EXTENSION;
-
-		File outputFile = new File(filename);
-		writer = new BufferedWriter(new FileWriter(outputFile));
 
 		while (wordScanner.hasNextWord()) {
 			final String word = wordScanner.nextWord();
@@ -207,38 +180,25 @@ public class Driver {
 				wordBag.add(word);
 			}
 		}
-		if (wordBag.size() == 0) {
-			System.out.println("Error: all words provided were too common");
-			writer.close();
-			return;
-		}
 
 		ArrayList<Integer> titleLengths = new ArrayList<>();
 		titleLengths.add(14);
 		System.out.printf("%16s", "given word");
-		writer.write("Website: " + url + "\n\n");
-		writer.write("Top 10 Words:\n");
-		writer.write(" given word\t\t");
 		for (LoadedPassage passageEntry : passages) {
 			titleLengths.add(passageEntry.passageTitle.length());
 			System.out.print("   " + passageEntry.passageTitle);
-			writer.write("Word Count");
 		}
 		System.out.println();
-		writer.write("\n");
 
 		for (int i : titleLengths) {
 			String dashes = new String(new char[i + 4]).replace("\0", "-");
 			System.out.print("+" + dashes);
-			writer.write("+" + dashes);
 		}
 		System.out.println("+");
-		writer.write("+\n");
 
 		// Array to sort words by frequency
-		ArrayList<TwoVariableHolder> outputArray = new ArrayList<>();
+		ArrayList<TwoVariableHolder> wordAndCountList = new ArrayList<>();
 		TwoVariableHolder temp;
-
 		for (String word : wordBag) {
 			System.out.printf("%16s", word);
 			for (LoadedPassage pe : passages) {
@@ -246,22 +206,87 @@ public class Driver {
 				final int cnt = pe.wordCounter.getWordCount(word);
 				System.out.printf("%" + width + "d", cnt);
 				temp = new TwoVariableHolder(cnt, word);
-				outputArray.add(temp);
+				wordAndCountList.add(temp);
 			}
-
 			System.out.println();
 		}
 
 		// Sort output in descending order
-		outputArray = sortOutputArray(outputArray);
+		wordAndCountList = sortOutputArray(wordAndCountList);
+		// Write list to file
+		writeToFile(url, wordBag, titleLengths, wordAndCountList, passages);
+	}
 
-		TwoVariableHolder tempHolder;
-		for (int i = 0; i < 10; i++) {
-			tempHolder = outputArray.get(i);
+	/**
+	 * Writes the frequent words to a .txt file
+	 * 
+	 * @param url the name of the analyzed URL
+	 * @param wordBag List of words from URL body
+	 * @param titleLengths List of the counts of analyzed URLs
+	 * @param wordAndCountList List of words with their counts
+	 * @param passages loaded passages to analyze against
+	 * @throws IOException if writer cannot write to file
+	 */
+	private static void writeToFile(String url, ArrayList<String> wordBag,
+			ArrayList<Integer> titleLengths,
+			ArrayList<TwoVariableHolder> wordAndCountList,
+			ArrayList<LoadedPassage> passages) throws IOException {
+		final String FILE_EXTENSION = ".txt";
+		final String WWW_CHECK = "http://www.";
+		final int WORD_COUNT_10 = 10;
+		int numWords = wordAndCountList.size();
+		LocalDate now = LocalDate.now();
+		DateTimeFormatter formatter = DateTimeFormatter
+				.ofPattern("yyyyMMdd");
+		String timeString = now.format(formatter);
+		String filename = "AnalyzedFile.txt";
+		BufferedWriter writer = null;
+		String beginUrl = url.substring(0, 11);
 
-			writer.write(tempHolder.toString());
+		if (beginUrl.equals(WWW_CHECK)) {
+			filename = url.substring(11);
+		} else {
+			filename = url.substring(7);
+		}
+		filename = filename.replace(".", "");
+		filename += timeString;
+		filename += FILE_EXTENSION;
+		File outputFile = new File(filename);
+		writer = new BufferedWriter(new FileWriter(outputFile));
+
+		if (wordBag.size() == 0) {
+			System.out.println("Error: all words provided were too common");
+			writer.close();
+			return;
 		}
 
+		writer.write("Website: " + url + "\n\n");
+		if (numWords < WORD_COUNT_10) {
+			writer.write("Top " + numWords + " Words:\n");
+		} else {
+			writer.write("Top 10 Words:\n");
+		}
+		writer.write(" given word\t\t");
+		writer.write("Word Count\n");
+
+		for (int i : titleLengths) {
+			String dashes = new String(new char[i + 4]).replace("\0", "-");
+			writer.write("+" + dashes);
+		}
+		writer.write("+\n");
+
+		TwoVariableHolder tempHolder;
+		if (wordAndCountList.size() < WORD_COUNT_10) {
+			for (int i = 0; i < wordAndCountList.size(); i++) {
+				tempHolder = wordAndCountList.get(i);
+				writer.write(tempHolder.toString());
+			}
+		} else {
+			for (int i = 0; i < WORD_COUNT_10; i++) {
+				tempHolder = wordAndCountList.get(i);
+				writer.write(tempHolder.toString());
+			}
+		}
 		writer.close();
 	}
 
